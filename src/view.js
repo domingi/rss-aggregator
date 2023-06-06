@@ -7,7 +7,6 @@ export default (state) => {
 
   const watchedState = onChange(state, (path, value) => {
     if (path === 'form.state') {
-      console.log(state.feed);
       if (value === 'invalid') {
         error.textContent = state.form.error;
         input.classList.add('is-invalid');

@@ -16,8 +16,8 @@
           <div class="modal-body text-break">
           </div>
           <div class="modal-footer">
-            <a class="btn btn-primary full-article" href="#" role="button" target="_blank" rel="noopener noreferrer">Читать полностью </a>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Прикрыть</button>
+            <a class="btn btn-primary full-article" href="#" role="button" target="_blank" rel="noopener noreferrer" id="buttonReadAll">Читать полностью</a>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="buttonHide">Прикрыть</button>
           </div>
         </div>
       </div>
@@ -37,11 +37,11 @@
                   </div>
                 </div>
                 <div class="col-auto">
-                  <button type="submit" aria-label="add" class="h-100 btn btn-lg btn-primary px-sm-5">Добавить</button>
+                  <button type="submit" aria-label="add" class="h-100 btn btn-lg btn-primary px-sm-5" id="buttonAdd">Добавить</button>
                 </div>
               </div>
             </form>
-            <p class="mt-2 mb-0">Например https://ru.hexlet.io/lessons.rss</p>
+            <p class="mt-2 mb-0" id="example">Например https://ru.hexlet.io/lessons.rss</p>
             <p class="feedback m-0 position-absolute small text-danger" id="error"></p>
           </div>
         </div>
