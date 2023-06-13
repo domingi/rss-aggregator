@@ -2,37 +2,12 @@ import './styles.scss';
 import '../index.html';
 import { string, setLocale } from 'yup';
 import i18next from 'i18next';
-import axios from 'axios';
-import { uniqueId } from 'lodash';
 import ru from '../locales/ru.js';
 import { removeModal, renderModal, renderText } from './render.js';
 import view from './view.js';
-
-const parseRSS = (url) => {
-  const xmlDom = axios.get(`https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}`)
-    .then((xml) => {
-      const parser = new DOMParser();
-      return parser.parseFromString(xml.data.contents, 'text/xml');
-    })
-    .catch((error) => {
-      throw error('Адрес не доступен. Введите другой адрес');
-    });
-  return xmlDom;
-};
-
-const getFeedTitle = (dom) => dom.querySelector('title').textContent;
-const getFeedDescription = (dom) => dom.querySelector('description').textContent;
-const getFeedPosts = (dom) => {
-  const items = dom.querySelectorAll('item');
-  const arr = [];
-  items.forEach((item) => {
-    const title = item.querySelector('title').textContent;
-    const description = item.querySelector('description').textContent;
-    const link = item.querySelector('link').textContent;
-    arr.push([uniqueId(), link, title, description]);
-  });
-  return arr;
-};
+import {
+  getFeedPosts, parseRSS, getFeedDescription, getFeedTitle, getNewPostsEvery5Sec,
+} from './tools.js';
 
 export default () => {
   const state = {
@@ -43,6 +18,10 @@ export default () => {
     content: {
       feed: [],
       sources: [],
+      id: 0,
+    },
+    ui: {
+      viewedPostIds: [],
     },
   };
 
@@ -64,7 +43,6 @@ export default () => {
       notOneOf: i18nInstance.t('errors.notOneOf'),
     },
   });
-
   const watchedState = view(state, i18nInstance);
 
   const modal = document.querySelector('#modal');
@@ -77,7 +55,9 @@ export default () => {
   const posts = document.querySelector('.posts');
   posts.addEventListener('click', (e) => {
     if (e.target.dataset.bsToggle === 'modal') {
-      renderModal(state, e.target.dataset.id);
+      const postId = Number(e.target.dataset.id);
+      if (!state.ui.viewedPostIds.includes(postId)) state.ui.viewedPostIds.push(postId);
+      renderModal(state, postId);
     }
   });
 
@@ -97,11 +77,12 @@ export default () => {
               title: getFeedTitle(rssDom),
               description: getFeedDescription(rssDom),
               url,
-              posts: getFeedPosts(rssDom),
+              posts: getFeedPosts(rssDom, state),
             });
             watchedState.form.error = '';
             watchedState.form.state = 'valid';
             state.form.state = '';
+            getNewPostsEvery5Sec(state, watchedState);
           });
       })
       .catch((error) => {

@@ -1,6 +1,7 @@
 import onChange from 'on-change';
 import {
   renderPosts,
+  renderFeed,
   renderMessageSuccess,
   renderError,
 } from './render.js';
@@ -12,8 +13,12 @@ export default (state, i18n) => {
         renderError(state);
       }
       if (value === 'valid') {
+        renderFeed(state);
         renderPosts(state);
         renderMessageSuccess(i18n);
+      }
+      if (value === 'updated') {
+        renderPosts(state);
       }
     }
   });

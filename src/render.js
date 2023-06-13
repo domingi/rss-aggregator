@@ -36,7 +36,7 @@ const renderMessageSuccess = (i18n) => {
   input.focus();
 };
 
-const renderPosts = (state) => {
+const renderFeed = (state) => {
   const feed = document.querySelector('.feeds');
   feed.innerHTML = '';
   const feedDiv = document.createElement('div');
@@ -51,7 +51,9 @@ const renderPosts = (state) => {
     ul.append(li);
     return item;
   });
+};
 
+const renderPosts = (state) => {
   const posts = document.querySelector('.posts');
   posts.innerHTML = '';
   const postsDiv = document.createElement('div');
@@ -64,7 +66,11 @@ const renderPosts = (state) => {
       const [index, link, title] = post;
       const li = document.createElement('li');
       li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-      li.innerHTML = `<a href=${link} class="fw-bold" data-id=${index} target="_blank" rel="noopener noreferrer">${title}</a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${index} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
+      li.innerHTML = `<a href=${link} data-id=${index} target="_blank" rel="noopener noreferrer">${title}</a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${index} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
+      const a = li.querySelector('a');
+      if (state.ui.viewedPostIds.includes(index)) {
+        a.classList.add('fw-normal');
+      } else a.classList.add('fw-bold');
       ul2.append(li);
       return post;
     });
@@ -88,6 +94,12 @@ const renderModal = (state, id) => {
   modal.querySelector('.modal-title').textContent = title;
   modal.querySelector('.modal-body').textContent = description;
   modal.querySelector('#buttonReadAll').setAttribute('href', link);
+
+  const a = document.querySelector(`a[data-id="${id}"]`);
+  if (state.ui.viewedPostIds.includes(id)) {
+    a.classList.add('fw-normal');
+    a.classList.remove('fw-bold');
+  }
 };
 
 const removeModal = () => {
@@ -100,6 +112,7 @@ const removeModal = () => {
 export {
   renderText,
   renderPosts,
+  renderFeed,
   renderMessageSuccess,
   renderError,
   renderModal,
