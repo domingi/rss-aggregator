@@ -7,6 +7,7 @@ export default {
     buttonAdd: 'Добавить',
     buttonReadAll: 'Читать полностью',
     buttonHide: 'Прикрыть',
+    messageSuccess: 'RSS успешно загружен',
     errors: {
       default: 'Ошибка данных, введите верный URL',
       url: 'Введите верный URL',

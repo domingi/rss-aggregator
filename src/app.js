@@ -2,27 +2,48 @@ import './styles.scss';
 import '../index.html';
 import { string, setLocale } from 'yup';
 import i18next from 'i18next';
+import axios from 'axios';
+import { uniqueId } from 'lodash';
 import ru from '../locales/ru.js';
-
+import { removeModal, renderModal, renderText } from './render.js';
 import view from './view.js';
 
-const renderText = (i18nInstance) => {
-  document.querySelector('h1').textContent = i18nInstance.t('h1');
-  document.querySelector('p.lead').textContent = i18nInstance.t('lead');
-  document.querySelector('label').textContent = i18nInstance.t('label');
-  document.querySelector('#example').textContent = i18nInstance.t('example');
-  document.querySelector('#buttonAdd').textContent = i18nInstance.t('buttonAdd');
-  document.querySelector('#buttonReadAll').textContent = i18nInstance.t('buttonReadAll');
-  document.querySelector('#buttonHide').textContent = i18nInstance.t('buttonHide');
+const parseRSS = (url) => {
+  const xmlDom = axios.get(`https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}`)
+    .then((xml) => {
+      const parser = new DOMParser();
+      return parser.parseFromString(xml.data.contents, 'text/xml');
+    })
+    .catch((error) => {
+      throw error('Адрес не доступен. Введите другой адрес');
+    });
+  return xmlDom;
+};
+
+const getFeedTitle = (dom) => dom.querySelector('title').textContent;
+const getFeedDescription = (dom) => dom.querySelector('description').textContent;
+const getFeedPosts = (dom) => {
+  const items = dom.querySelectorAll('item');
+  const arr = [];
+  items.forEach((item) => {
+    const title = item.querySelector('title').textContent;
+    const description = item.querySelector('description').textContent;
+    const link = item.querySelector('link').textContent;
+    arr.push([uniqueId(), link, title, description]);
+  });
+  return arr;
 };
 
 export default () => {
   const state = {
     form: {
-      state: 'valid',
+      state: '',
       error: [],
     },
-    feed: [],
+    content: {
+      feed: [],
+      sources: [],
+    },
   };
 
   const i18nInstance = i18next.createInstance();
@@ -44,20 +65,44 @@ export default () => {
     },
   });
 
+  const watchedState = view(state, i18nInstance);
+
+  const modal = document.querySelector('#modal');
+  modal.addEventListener('click', (e) => {
+    if (e.target.dataset.bsDismiss === 'modal') {
+      removeModal();
+    }
+  });
+
+  const posts = document.querySelector('.posts');
+  posts.addEventListener('click', (e) => {
+    if (e.target.dataset.bsToggle === 'modal') {
+      renderModal(state, e.target.dataset.id);
+    }
+  });
+
   const form = document.querySelector('form');
-  const watchedState = view(state);
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const userSchema = string().url().notOneOf(state.feed);
-
-    const formData = new FormData(e.target);
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
     const url = formData.get('url');
+
+    const userSchema = string().url().notOneOf(state.content.feed);
     userSchema.validate(url)
       .then(() => {
-        state.feed.push(url);
-        watchedState.form.error = '';
-        watchedState.form.state = 'valid';
+        parseRSS(url)
+          .then((rssDom) => {
+            state.content.feed.push(url);
+            state.content.sources.push({
+              title: getFeedTitle(rssDom),
+              description: getFeedDescription(rssDom),
+              url,
+              posts: getFeedPosts(rssDom),
+            });
+            watchedState.form.error = '';
+            watchedState.form.state = 'valid';
+            state.form.state = '';
+          });
       })
       .catch((error) => {
         watchedState.form.error = error.errors;

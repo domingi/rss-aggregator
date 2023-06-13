@@ -1,22 +1,19 @@
 import onChange from 'on-change';
+import {
+  renderPosts,
+  renderMessageSuccess,
+  renderError,
+} from './render.js';
 
-export default (state) => {
-  const form = document.querySelector('form');
-  const input = document.querySelector('input');
-  const error = document.querySelector('#error');
-
+export default (state, i18n) => {
   const watchedState = onChange(state, (path, value) => {
     if (path === 'form.state') {
       if (value === 'invalid') {
-        error.textContent = state.form.error;
-        input.classList.add('is-invalid');
-        input.focus();
+        renderError(state);
       }
       if (value === 'valid') {
-        error.textContent = state.form.error;
-        input.classList.remove('is-invalid');
-        form.reset();
-        input.focus();
+        renderPosts(state);
+        renderMessageSuccess(i18n);
       }
     }
   });
