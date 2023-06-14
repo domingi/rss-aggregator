@@ -36,11 +36,12 @@ export default () => {
 
   setLocale({
     string: {
-      default: i18nInstance.t('errors.default'),
-      url: i18nInstance.t('errors.url'),
+      default: 'default',
+      url: 'url',
     },
     mixed: {
-      notOneOf: i18nInstance.t('errors.notOneOf'),
+      notOneOf: 'notOneOf',
+      required: 'required',
     },
   });
   const watchedState = view(state, i18nInstance);
@@ -67,10 +68,10 @@ export default () => {
     const formData = new FormData(event.target);
     const url = formData.get('url');
 
-    const userSchema = string().url().notOneOf(state.content.feed);
+    const userSchema = string().required().url().notOneOf(state.content.feed);
     userSchema.validate(url)
       .then(() => {
-        parseRSS(url)
+        parseRSS(url, watchedState)
           .then((rssDom) => {
             state.content.feed.push(url);
             state.content.sources.push({
@@ -81,14 +82,15 @@ export default () => {
             });
             watchedState.form.error = '';
             watchedState.form.state = 'valid';
-            state.form.state = '';
             getNewPostsEvery5Sec(state, watchedState);
+          }).catch((error) => {
+            watchedState.form.error = error.code;
+            watchedState.form.state = 'invalid';
           });
       })
       .catch((error) => {
         watchedState.form.error = error.errors;
         watchedState.form.state = 'invalid';
-        state.form.state = '';
       });
   });
 };

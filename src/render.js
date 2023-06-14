@@ -8,12 +8,12 @@ const renderText = (i18nInstance) => {
   document.querySelector('#buttonHide').textContent = i18nInstance.t('buttonHide');
 };
 
-const renderError = (state) => {
+const renderError = (state, i18n) => {
   const form = document.querySelector('form');
   const input = document.querySelector('input');
   const statusMessage = document.querySelector('#status-message');
 
-  statusMessage.textContent = state.form.error;
+  statusMessage.textContent = i18n.t(`errors.${state.form.error}`);
   input.classList.add('is-invalid');
   statusMessage.classList.add('text-danger');
   statusMessage.classList.remove('text-succes');

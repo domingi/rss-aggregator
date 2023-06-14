@@ -10,7 +10,7 @@ export default (state, i18n) => {
   const watchedState = onChange(state, (path, value) => {
     if (path === 'form.state') {
       if (value === 'invalid') {
-        renderError(state);
+        renderError(state, i18n);
       }
       if (value === 'valid') {
         renderFeed(state);
@@ -20,6 +20,8 @@ export default (state, i18n) => {
       if (value === 'updated') {
         renderPosts(state);
       }
+      // eslint-disable-next-line no-param-reassign
+      state.form.state = '';
     }
   });
   return watchedState;

@@ -10,8 +10,11 @@ export default {
     messageSuccess: 'RSS успешно загружен',
     errors: {
       default: 'Ошибка данных, введите верный URL',
-      url: 'Введите верный URL',
-      notOneOf: 'Этот URL уже в списке фида. Введите другой адрес',
+      url: 'Ссылка должна быть валидным URL',
+      notOneOf: 'RSS уже существует',
+      required: 'Не должно быть пустым',
+      notRss: 'Ресурс не содержит валидный RSS',
+      ERR_NETWORK: 'Ошибка сети',
     },
   },
 };

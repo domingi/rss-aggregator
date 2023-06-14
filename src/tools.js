@@ -2,14 +2,23 @@
 /* eslint-disable no-unused-vars */
 import axios from 'axios';
 
-const parseRSS = (url) => {
+function MyError(message, code) {
+  this.name = 'MyError';
+  this.message = message || 'Сообщение по умолчанию';
+  this.stack = (new Error()).stack;
+  this.code = code;
+}
+MyError.prototype = Object.create(Error.prototype);
+MyError.prototype.constructor = MyError;
+
+const parseRSS = (url, watchedState) => {
   const xmlDom = axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
     .then((xml) => {
+      if (!xml.data.contents.startsWith('<?xml')) {
+        throw new MyError('Error: not RSS', 'notRss');
+      }
       const parser = new DOMParser();
       return parser.parseFromString(xml.data.contents, 'text/xml');
-    })
-    .catch((error) => {
-      throw error('Адрес не доступен. Введите другой адрес');
     });
   return xmlDom;
 };
@@ -44,7 +53,7 @@ const getNewFeedPosts = (dom, state, link) => {
 };
 
 const getNewPostsEvery5Sec = (state, watchedState) => new Promise((resolve) => {
-  setTimeout(resolve, 50000);
+  setTimeout(resolve, 5000);
 })
   .then(() => {
     state.content.sources.forEach((source) => {
@@ -52,7 +61,6 @@ const getNewPostsEvery5Sec = (state, watchedState) => new Promise((resolve) => {
         .then((rssDom) => {
           source.posts = getNewFeedPosts(rssDom, state, source.url);
           watchedState.form.state = 'updated';
-          state.form.state = '';
         })
         .then(() => {
           getNewPostsEvery5Sec(state, watchedState);
