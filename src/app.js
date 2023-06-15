@@ -44,14 +44,8 @@ export default () => {
       required: 'required',
     },
   });
-  const watchedState = view(state, i18nInstance);
 
-  const modal = document.querySelector('#modal');
-  modal.addEventListener('click', (e) => {
-    if (e.target.dataset.bsDismiss === 'modal') {
-      removeModal();
-    }
-  });
+  const watchedState = view(state, i18nInstance);
 
   const posts = document.querySelector('.posts');
   posts.addEventListener('click', (e) => {
@@ -62,16 +56,25 @@ export default () => {
     }
   });
 
+  const modal = document.querySelector('#modal');
+  modal.addEventListener('click', (e) => {
+    if (e.target.dataset.bsDismiss === 'modal') {
+      removeModal();
+    }
+  });
+
   const form = document.querySelector('form');
+  const button = document.querySelector('#buttonAdd');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    button.setAttribute('disabled', '');
     const formData = new FormData(event.target);
     const url = formData.get('url');
 
     const userSchema = string().required().url().notOneOf(state.content.feed);
     userSchema.validate(url)
       .then(() => {
-        parseRSS(url, watchedState)
+        parseRSS(url)
           .then((rssDom) => {
             state.content.feed.push(url);
             state.content.sources.push({
@@ -80,17 +83,18 @@ export default () => {
               url,
               posts: getFeedPosts(rssDom, state),
             });
-            watchedState.form.error = '';
+            state.form.error = '';
             watchedState.form.state = 'valid';
-            getNewPostsEvery5Sec(state, watchedState);
           }).catch((error) => {
-            watchedState.form.error = error.code;
+            state.form.error = error.code;
             watchedState.form.state = 'invalid';
           });
       })
       .catch((error) => {
-        watchedState.form.error = error.errors;
+        state.form.error = error.errors;
         watchedState.form.state = 'invalid';
       });
+    button.removeAttribute('disabled');
   });
+  getNewPostsEvery5Sec(state, watchedState);
 };

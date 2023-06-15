@@ -4,14 +4,14 @@ import axios from 'axios';
 
 function MyError(message, code) {
   this.name = 'MyError';
-  this.message = message || 'Сообщение по умолчанию';
+  this.message = message || 'Unknown error';
   this.stack = (new Error()).stack;
   this.code = code;
 }
 MyError.prototype = Object.create(Error.prototype);
 MyError.prototype.constructor = MyError;
 
-const parseRSS = (url, watchedState) => {
+const parseRSS = (url) => {
   const xmlDom = axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
     .then((xml) => {
       if (!xml.data.contents.startsWith('<?xml')) {
@@ -54,19 +54,22 @@ const getNewFeedPosts = (dom, state, link) => {
 
 const getNewPostsEvery5Sec = (state, watchedState) => new Promise((resolve) => {
   setTimeout(resolve, 5000);
-})
-  .then(() => {
-    state.content.sources.forEach((source) => {
-      parseRSS(source.url)
-        .then((rssDom) => {
-          source.posts = getNewFeedPosts(rssDom, state, source.url);
-          watchedState.form.state = 'updated';
-        })
-        .then(() => {
-          getNewPostsEvery5Sec(state, watchedState);
-        });
+}).then(() => {
+  if (state.content.feed.length === 0) return;
+  const promises = state.content.sources.forEach((source) => {
+    parseRSS(source.url).then((rssDom) => {
+      source.posts = getNewFeedPosts(rssDom, state, source.url);
     });
   });
+  console.log(promises);
+  const promise = Promise.all([promises]);
+  promise.then((content) => {
+    console.log(content);
+    watchedState.form.state = 'updated';
+  });
+}).then(() => {
+  getNewPostsEvery5Sec(state, watchedState);
+});
 
 export {
   getFeedTitle,
