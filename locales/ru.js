@@ -6,7 +6,7 @@ export default {
     example: 'Например https://ru.hexlet.io/lessons.rss',
     buttonAdd: 'Добавить',
     buttonReadAll: 'Читать полностью',
-    buttonHide: 'Прикрыть',
+    buttonHide: 'Закрыть',
     messageSuccess: 'RSS успешно загружен',
     errors: {
       default: 'Ошибка данных, введите верный URL',
