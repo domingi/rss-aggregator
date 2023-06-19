@@ -11,7 +11,7 @@ function MyError(message, code) {
 MyError.prototype = Object.create(Error.prototype);
 MyError.prototype.constructor = MyError;
 
-const parseRSS = (url) => {
+const loadRSS = (url) => {
   const xmlDom = axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
     .then((xml) => {
       if (!xml.data.contents.startsWith('<?xml')) {
@@ -23,58 +23,57 @@ const parseRSS = (url) => {
   return xmlDom;
 };
 
-const getFeedTitle = (dom) => dom.querySelector('title').textContent;
-
-const getFeedDescription = (dom) => dom.querySelector('description').textContent;
-
-const getFeedPosts = (dom, state) => {
+const parseRSS = (dom, state) => {
   const items = dom.querySelectorAll('item');
   const arr = [];
   items.forEach((item) => {
-    const { id } = state.content;
-    state.content.id += 1;
+    const { currentId } = state.modalId;
+    state.modalId.currentId += 1;
     const title = item.querySelector('title').textContent;
     const description = item.querySelector('description').textContent;
     const link = item.querySelector('link').textContent;
-    arr.push([id, link, title, description]);
+    arr.push([currentId, link, title, description]);
   });
   return arr;
 };
 
-const getNewFeedPosts = (dom, state, link) => {
-  const newPosts = getFeedPosts(dom, state);
-  const feedToUpdate = state.content.sources.find(({ url }) => url === link);
-  const newPostsToAdd = feedToUpdate.posts.filter((post) => {
-    const [_id, _url, title] = post;
-    const comparePosts = newPosts.filter(([_id2, _url2, title2]) => title2 === title);
-    return !(comparePosts.length > 0);
-  });
-  return [...feedToUpdate.posts, ...newPostsToAdd];
+const getNewFeedPosts = (dom, state, post) => {
+  const newPosts = parseRSS(dom, state);
+  const newPostsAdd = newPosts.reduce((acc, newPost) => {
+    const [_id, url1] = newPost;
+    const comparePosts = post.items.filter(([_id2, url2]) => url2 === url1);
+    if (comparePosts.length === 0) acc.push(newPost);
+    return acc;
+  }, []);
+  return [...post.items, ...newPostsAdd];
 };
 
-const getNewPostsEvery5Sec = (state, watchedState) => new Promise((resolve) => {
-  setTimeout(resolve, 5000);
-}).then(() => {
-  if (state.content.feed.length === 0) return;
-  const promises = state.content.sources.forEach((source) => {
-    parseRSS(source.url).then((rssDom) => {
-      source.posts = getNewFeedPosts(rssDom, state, source.url);
+const refreshFeed = (state, watchedState) => {
+  const iter = () => {
+    if (state.feeds.length === 0) return;
+    const promises = state.posts.map((post) => loadRSS(post.url)
+      .then((rssDom) => {
+        post.items = getNewFeedPosts(rssDom, state, post);
+      }).catch((error) => {
+        console.log('Ошибка при обновлении RSS');
+      }));
+    const promise = Promise.all([promises]);
+    promise.then(() => {
+      state.loadingProcess.error = '';
+      watchedState.loadingProcess.status = 'updated';
     });
-  });
-  console.log(promises);
-  const promise = Promise.all([promises]);
-  promise.then((content) => {
-    console.log(content);
-    watchedState.form.state = 'updated';
-  });
-}).then(() => {
-  getNewPostsEvery5Sec(state, watchedState);
-});
+  };
+
+  return new Promise((resolve) => {
+    setTimeout(resolve, 5000);
+  }).then(() => iter())
+    .then(() => {
+      refreshFeed(state, watchedState);
+    });
+};
 
 export {
-  getFeedTitle,
-  getFeedDescription,
-  getFeedPosts,
   parseRSS,
-  getNewPostsEvery5Sec,
+  loadRSS,
+  refreshFeed,
 };

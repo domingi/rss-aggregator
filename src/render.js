@@ -8,12 +8,12 @@ const renderText = (i18nInstance) => {
   document.querySelector('#buttonHide').textContent = i18nInstance.t('buttonHide');
 };
 
-const renderError = (state, i18n) => {
+const renderError = (errorSource, i18n) => {
   const form = document.querySelector('form');
   const input = document.querySelector('input');
   const statusMessage = document.querySelector('#status-message');
 
-  statusMessage.textContent = i18n.t(`errors.${state.form.error}`);
+  statusMessage.textContent = i18n.t(`errors.${errorSource}`);
   input.classList.add('is-invalid');
   statusMessage.classList.add('text-danger');
   statusMessage.classList.remove('text-succes');
@@ -44,7 +44,7 @@ const renderFeed = (state) => {
   const ul = document.createElement('ul');
   ul.classList.add('list-group', 'border-0', 'rounded-0');
   feed.append(feedDiv, ul);
-  state.content.sources.map((item) => {
+  state.posts.map((item) => {
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
     li.innerHTML = `<h3 class="h6 m-0">${item.title}</h3><p class="m-0 small text-black-50">${item.description}</p></li>`;
@@ -61,20 +61,20 @@ const renderPosts = (state) => {
   const ul2 = document.createElement('ul');
   ul2.classList.add('list-group', 'border-0', 'rounded-0');
   posts.append(postsDiv, ul2);
-  state.content.sources.map((item) => {
-    item.posts.map((post) => {
-      const [index, link, title] = post;
+  state.posts.map((post) => {
+    post.items.map((item) => {
+      const [id, link, title] = item;
       const li = document.createElement('li');
       li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-      li.innerHTML = `<a href=${link} data-id=${index} target="_blank" rel="noopener noreferrer">${title}</a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${index} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
+      li.innerHTML = `<a href=${link} data-id=${id} target="_blank" rel="noopener noreferrer">${title}</a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${id} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
       const a = li.querySelector('a');
-      if (state.ui.viewedPostIds.includes(index)) {
+      if (state.modalId.seenPostIds.includes(id)) {
         a.classList.add('fw-normal');
       } else a.classList.add('fw-bold');
       ul2.append(li);
-      return post;
+      return item;
     });
-    return item;
+    return post;
   });
 };
 
@@ -84,8 +84,8 @@ const renderModal = (state, id) => {
   modal.setAttribute('aria-modal', 'true');
   modal.setAttribute('style', 'display: block;');
 
-  const postForModal = state.content.sources.reduce((acc, feed) => {
-    const data = feed.posts.find((post) => post.includes(id));
+  const postForModal = state.posts.reduce((acc, feed) => {
+    const data = feed.items.find((item) => item.includes(id));
     if (data) return [...data];
     return acc;
   }, []);
@@ -96,7 +96,7 @@ const renderModal = (state, id) => {
   modal.querySelector('#buttonReadAll').setAttribute('href', link);
 
   const a = document.querySelector(`a[data-id="${id}"]`);
-  if (state.ui.viewedPostIds.includes(id)) {
+  if (state.modalId.seenPostIds.includes(id)) {
     a.classList.add('fw-normal');
     a.classList.remove('fw-bold');
   }

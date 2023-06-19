@@ -6,22 +6,20 @@ import ru from '../locales/ru.js';
 import { removeModal, renderModal, renderText } from './render.js';
 import view from './view.js';
 import {
-  getFeedPosts, parseRSS, getFeedDescription, getFeedTitle, getNewPostsEvery5Sec,
+  parseRSS, loadRSS, refreshFeed,
 } from './tools.js';
 
 export default () => {
   const state = {
-    form: {
-      state: '',
+    loadingProcess: {
+      status: '',
       error: [],
     },
-    content: {
-      feed: [],
-      sources: [],
-      id: 0,
-    },
-    ui: {
-      viewedPostIds: [],
+    feeds: [],
+    posts: [],
+    modalId: {
+      currentId: 0,
+      seenPostIds: [],
     },
   };
 
@@ -51,7 +49,9 @@ export default () => {
   posts.addEventListener('click', (e) => {
     if (e.target.dataset.bsToggle === 'modal') {
       const postId = Number(e.target.dataset.id);
-      if (!state.ui.viewedPostIds.includes(postId)) state.ui.viewedPostIds.push(postId);
+      if (!state.modalId.seenPostIds.includes(postId)) {
+        state.modalId.seenPostIds.push(postId);
+      }
       renderModal(state, postId);
     }
   });
@@ -64,37 +64,35 @@ export default () => {
   });
 
   const form = document.querySelector('form');
-  const button = document.querySelector('#buttonAdd');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    button.setAttribute('disabled', '');
     const formData = new FormData(event.target);
     const url = formData.get('url');
 
-    const userSchema = string().required().url().notOneOf(state.content.feed);
+    const userSchema = string().required().url().notOneOf(state.feeds);
     userSchema.validate(url)
       .then(() => {
-        parseRSS(url)
+        watchedState.loadingProcess.status = 'loading';
+        loadRSS(url)
           .then((rssDom) => {
-            state.content.feed.push(url);
-            state.content.sources.push({
-              title: getFeedTitle(rssDom),
-              description: getFeedDescription(rssDom),
+            state.feeds.push(url);
+            state.posts.push({
+              title: rssDom.querySelector('title').textContent,
+              description: rssDom.querySelector('description').textContent,
               url,
-              posts: getFeedPosts(rssDom, state),
+              items: parseRSS(rssDom, state),
             });
-            state.form.error = '';
-            watchedState.form.state = 'valid';
+            state.loadingProcess.error = '';
+            watchedState.loadingProcess.status = 'success';
           }).catch((error) => {
-            state.form.error = error.code;
-            watchedState.form.state = 'invalid';
+            state.loadingProcess.error = error.code;
+            watchedState.loadingProcess.status = 'failed';
           });
       })
       .catch((error) => {
-        state.form.error = error.errors;
-        watchedState.form.state = 'invalid';
+        state.loadingProcess.error = error.errors;
+        watchedState.loadingProcess.status = 'failed';
       });
-    button.removeAttribute('disabled');
   });
-  getNewPostsEvery5Sec(state, watchedState);
+  refreshFeed(state, watchedState);
 };
