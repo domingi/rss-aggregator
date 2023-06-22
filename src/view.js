@@ -4,6 +4,9 @@ import {
   renderFeed,
   renderMessageSuccess,
   renderError,
+  removeModal,
+  renderModal,
+  renderSeenPosts,
 } from './render.js';
 
 export default (state, i18n, elements) => {
@@ -23,11 +26,25 @@ export default (state, i18n, elements) => {
       // eslint-disable-next-line no-param-reassign
       state.loadingProcess.status = '';
     }
+
     if (path === 'feeds') {
       renderFeed(state, elements);
     }
+
     if (path.includes('posts')) {
       renderPosts(state, elements);
+    }
+
+    if (path === 'modalId') {
+      if (value === null) {
+        removeModal(elements);
+      } else {
+        renderModal(state, value, elements);
+      }
+    }
+
+    if (path === 'seenPostIds') {
+      renderSeenPosts(state);
     }
   });
   return watchedState;

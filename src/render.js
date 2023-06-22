@@ -52,6 +52,7 @@ const renderPosts = (state, elements) => {
   const ul2 = document.createElement('ul');
   ul2.classList.add('list-group', 'border-0', 'rounded-0');
   elements.posts.append(postsDiv, ul2);
+
   state.posts.map((post) => {
     post.items.map((item) => {
       const [id, link, title] = item;
@@ -59,7 +60,7 @@ const renderPosts = (state, elements) => {
       li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
       li.innerHTML = `<a href=${link} data-id=${id} target="_blank" rel="noopener noreferrer">${title}</a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${id} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
       const a = li.querySelector('a');
-      if (state.modalId.seenPostIds.includes(id)) {
+      if (state.seenPostIds.includes(id)) {
         a.classList.add('fw-normal');
       } else a.classList.add('fw-bold');
       ul2.append(li);
@@ -84,18 +85,20 @@ const renderModal = (state, postId, elements) => {
   elements.modal.querySelector('.modal-title').textContent = title;
   elements.modal.querySelector('.modal-body').textContent = description;
   elements.modal.querySelector('#buttonReadAll').setAttribute('href', link);
-
-  const postLink = document.querySelector(`a[data-id="${postId}"]`);
-  if (state.modalId.seenPostIds.includes(postId)) {
-    postLink.classList.add('fw-normal');
-    postLink.classList.remove('fw-bold');
-  }
 };
 
 const removeModal = (elements) => {
   elements.modal.classList.remove('show');
   elements.modal.removeAttribute('aria-modal');
   elements.modal.removeAttribute('style');
+};
+
+const renderSeenPosts = (state) => {
+  state.seenPostIds.forEach((id) => {
+    const postLink = document.querySelector(`a[data-id="${id}"]`);
+    postLink.classList.add('fw-normal');
+    postLink.classList.remove('fw-bold');
+  });
 };
 
 export {
@@ -106,4 +109,5 @@ export {
   renderError,
   renderModal,
   removeModal,
+  renderSeenPosts,
 };

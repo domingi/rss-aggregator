@@ -30,12 +30,12 @@ const parseRSS = (dom, url, state) => {
   const posts = dom.querySelectorAll('item');
   const items = [];
   posts.forEach((post) => {
-    const { currentId } = state.modalId;
-    state.modalId.currentId += 1;
+    const { idCounter } = state;
+    state.idCounter += 1;
     const postTitle = post.querySelector('title').textContent;
     const postDescription = post.querySelector('description').textContent;
     const link = post.querySelector('link').textContent;
-    items.push([currentId, link, postTitle, postDescription]);
+    items.push([idCounter, link, postTitle, postDescription]);
   });
   return {
     title, description, url, items,
@@ -54,23 +54,24 @@ const getNewFeedPosts = (dom, state, post, url) => {
 };
 
 const refreshFeed = (watchedState) => {
-  const iter = () => {
-    if (watchedState.feeds.length === 0) return;
-    const promises = watchedState.posts.map((post) => loadRSS(post.url)
-      .then((rssDom) => {
-        post.items = getNewFeedPosts(rssDom, watchedState, post, post.url);
-      }).catch(() => {
-        console.log('Ошибка при обновлении RSS');
-      }));
-    Promise.all([promises]);
-  };
-
-  return new Promise((resolve) => {
-    setTimeout(resolve, 5000);
-  }).then(() => iter())
-    .then(() => {
+  if (watchedState.feeds.length === 0) {
+    return setTimeout(() => {
       refreshFeed(watchedState);
-    });
+    }, 5000);
+  }
+
+  const promises = watchedState.posts.map((post) => loadRSS(post.url)
+    .then((rssDom) => {
+      post.items = getNewFeedPosts(rssDom, watchedState, post, post.url);
+    }).catch(() => {
+      console.log('Ошибка при обновлении RSS');
+    }));
+
+  return Promise.all([promises]).then(() => {
+    setTimeout(() => {
+      refreshFeed(watchedState);
+    }, 5000);
+  });
 };
 
 export {

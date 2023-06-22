@@ -3,7 +3,7 @@ import '../index.html';
 import { string } from 'yup';
 import i18next from 'i18next';
 import ru from '../locales/ru.js';
-import { removeModal, renderModal, renderText } from './render.js';
+import { renderText } from './render.js';
 import watch from './view.js';
 import {
   parseRSS, loadRSS, refreshFeed,
@@ -17,10 +17,9 @@ export default () => {
     },
     feeds: [],
     posts: [],
-    modalId: {
-      currentId: 0,
-      seenPostIds: [],
-    },
+    modalId: null,
+    seenPostIds: [],
+    idCounter: 0,
   };
 
   const elements = {
@@ -47,16 +46,16 @@ export default () => {
   elements.posts.addEventListener('click', (e) => {
     if (e.target.dataset.bsToggle === 'modal') {
       const postId = Number(e.target.dataset.id);
-      if (!state.modalId.seenPostIds.includes(postId)) {
-        state.modalId.seenPostIds.push(postId);
+      if (!state.seenPostIds.includes(postId)) {
+        watchedState.seenPostIds.push(postId);
       }
-      renderModal(state, postId, elements);
+      watchedState.modalId = Number(e.target.dataset.id);
     }
   });
 
   elements.modal.addEventListener('click', (e) => {
     if (e.target.dataset.bsDismiss === 'modal') {
-      removeModal(elements);
+      watchedState.modalId = null;
     }
   });
 
