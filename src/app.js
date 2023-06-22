@@ -1,10 +1,10 @@
 import './styles.scss';
 import '../index.html';
-import { string, setLocale } from 'yup';
+import { string } from 'yup';
 import i18next from 'i18next';
 import ru from '../locales/ru.js';
 import { removeModal, renderModal, renderText } from './render.js';
-import view from './view.js';
+import watch from './view.js';
 import {
   parseRSS, loadRSS, refreshFeed,
 } from './tools.js';
@@ -23,6 +23,16 @@ export default () => {
     },
   };
 
+  const elements = {
+    form: document.querySelector('form'),
+    feed: document.querySelector('.feeds'),
+    posts: document.querySelector('.posts'),
+    modal: document.querySelector('#modal'),
+    input: document.querySelector('input'),
+    statusMessage: document.querySelector('#status-message'),
+    buttonAdd: document.querySelector('#buttonAdd'),
+  };
+
   const i18nInstance = i18next.createInstance();
   i18nInstance.init({
     lng: 'ru',
@@ -32,39 +42,25 @@ export default () => {
     },
   }).then(renderText(i18nInstance));
 
-  setLocale({
-    string: {
-      default: 'default',
-      url: 'url',
-    },
-    mixed: {
-      notOneOf: 'notOneOf',
-      required: 'required',
-    },
-  });
+  const watchedState = watch(state, i18nInstance, elements);
 
-  const watchedState = view(state, i18nInstance);
-
-  const posts = document.querySelector('.posts');
-  posts.addEventListener('click', (e) => {
+  elements.posts.addEventListener('click', (e) => {
     if (e.target.dataset.bsToggle === 'modal') {
       const postId = Number(e.target.dataset.id);
       if (!state.modalId.seenPostIds.includes(postId)) {
         state.modalId.seenPostIds.push(postId);
       }
-      renderModal(state, postId);
+      renderModal(state, postId, elements);
     }
   });
 
-  const modal = document.querySelector('#modal');
-  modal.addEventListener('click', (e) => {
+  elements.modal.addEventListener('click', (e) => {
     if (e.target.dataset.bsDismiss === 'modal') {
-      removeModal();
+      removeModal(elements);
     }
   });
 
-  const form = document.querySelector('form');
-  form.addEventListener('submit', (event) => {
+  elements.form.addEventListener('submit', (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const url = formData.get('url');
@@ -75,13 +71,8 @@ export default () => {
         watchedState.loadingProcess.status = 'loading';
         loadRSS(url)
           .then((rssDom) => {
-            state.feeds.push(url);
-            state.posts.push({
-              title: rssDom.querySelector('title').textContent,
-              description: rssDom.querySelector('description').textContent,
-              url,
-              items: parseRSS(rssDom, state),
-            });
+            watchedState.posts.push(parseRSS(rssDom, url, state));
+            watchedState.feeds.push(url);
             state.loadingProcess.error = '';
             watchedState.loadingProcess.status = 'success';
           }).catch((error) => {
@@ -90,9 +81,9 @@ export default () => {
           });
       })
       .catch((error) => {
-        state.loadingProcess.error = error.errors;
+        state.loadingProcess.error = error.type;
         watchedState.loadingProcess.status = 'failed';
       });
   });
-  refreshFeed(state, watchedState);
+  refreshFeed(watchedState);
 };

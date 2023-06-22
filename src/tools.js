@@ -23,23 +23,28 @@ const loadRSS = (url) => {
   return xmlDom;
 };
 
-const parseRSS = (dom, state) => {
-  const items = dom.querySelectorAll('item');
-  const arr = [];
-  items.forEach((item) => {
+const parseRSS = (dom, url, state) => {
+  const title = dom.querySelector('title').textContent;
+  const description = dom.querySelector('description').textContent;
+
+  const posts = dom.querySelectorAll('item');
+  const items = [];
+  posts.forEach((post) => {
     const { currentId } = state.modalId;
     state.modalId.currentId += 1;
-    const title = item.querySelector('title').textContent;
-    const description = item.querySelector('description').textContent;
-    const link = item.querySelector('link').textContent;
-    arr.push([currentId, link, title, description]);
+    const postTitle = post.querySelector('title').textContent;
+    const postDescription = post.querySelector('description').textContent;
+    const link = post.querySelector('link').textContent;
+    items.push([currentId, link, postTitle, postDescription]);
   });
-  return arr;
+  return {
+    title, description, url, items,
+  };
 };
 
-const getNewFeedPosts = (dom, state, post) => {
-  const newPosts = parseRSS(dom, state);
-  const newPostsAdd = newPosts.reduce((acc, newPost) => {
+const getNewFeedPosts = (dom, state, post, url) => {
+  const newPosts = parseRSS(dom, url, state);
+  const newPostsAdd = newPosts.items.reduce((acc, newPost) => {
     const [_id, url1] = newPost;
     const comparePosts = post.items.filter(([_id2, url2]) => url2 === url1);
     if (comparePosts.length === 0) acc.push(newPost);
@@ -48,27 +53,23 @@ const getNewFeedPosts = (dom, state, post) => {
   return [...post.items, ...newPostsAdd];
 };
 
-const refreshFeed = (state, watchedState) => {
+const refreshFeed = (watchedState) => {
   const iter = () => {
-    if (state.feeds.length === 0) return;
-    const promises = state.posts.map((post) => loadRSS(post.url)
+    if (watchedState.feeds.length === 0) return;
+    const promises = watchedState.posts.map((post) => loadRSS(post.url)
       .then((rssDom) => {
-        post.items = getNewFeedPosts(rssDom, state, post);
-      }).catch((error) => {
+        post.items = getNewFeedPosts(rssDom, watchedState, post, post.url);
+      }).catch(() => {
         console.log('Ошибка при обновлении RSS');
       }));
-    const promise = Promise.all([promises]);
-    promise.then(() => {
-      state.loadingProcess.error = '';
-      watchedState.loadingProcess.status = 'updated';
-    });
+    Promise.all([promises]);
   };
 
   return new Promise((resolve) => {
     setTimeout(resolve, 5000);
   }).then(() => iter())
     .then(() => {
-      refreshFeed(state, watchedState);
+      refreshFeed(watchedState);
     });
 };
 

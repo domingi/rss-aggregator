@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 const renderText = (i18nInstance) => {
   document.querySelector('h1').textContent = i18nInstance.t('h1');
   document.querySelector('p.lead').textContent = i18nInstance.t('lead');
@@ -8,42 +9,33 @@ const renderText = (i18nInstance) => {
   document.querySelector('#buttonHide').textContent = i18nInstance.t('buttonHide');
 };
 
-const renderError = (errorSource, i18n) => {
-  const form = document.querySelector('form');
-  const input = document.querySelector('input');
-  const statusMessage = document.querySelector('#status-message');
+const renderError = (errorSource, i18n, elements) => {
+  elements.statusMessage.textContent = i18n.t(`errors.${errorSource}`);
+  elements.input.classList.add('is-invalid');
+  elements.statusMessage.classList.add('text-danger');
+  elements.statusMessage.classList.remove('text-succes');
 
-  statusMessage.textContent = i18n.t(`errors.${errorSource}`);
-  input.classList.add('is-invalid');
-  statusMessage.classList.add('text-danger');
-  statusMessage.classList.remove('text-succes');
-
-  form.reset();
-  input.focus();
+  elements.form.reset();
+  elements.input.focus();
 };
 
-const renderMessageSuccess = (i18n) => {
-  const form = document.querySelector('form');
-  const input = document.querySelector('input');
-  const statusMessage = document.querySelector('#status-message');
+const renderMessageSuccess = (i18n, elements) => {
+  elements.statusMessage.textContent = i18n.t('messageSuccess');
+  elements.input.classList.remove('is-invalid');
+  elements.statusMessage.classList.remove('text-danger');
+  elements.statusMessage.classList.add('text-success');
 
-  statusMessage.textContent = i18n.t('messageSuccess');
-  input.classList.remove('is-invalid');
-  statusMessage.classList.remove('text-danger');
-  statusMessage.classList.add('text-success');
-
-  form.reset();
-  input.focus();
+  elements.form.reset();
+  elements.input.focus();
 };
 
-const renderFeed = (state) => {
-  const feed = document.querySelector('.feeds');
-  feed.innerHTML = '';
+const renderFeed = (state, elements) => {
+  elements.feed.innerHTML = '';
   const feedDiv = document.createElement('div');
   feedDiv.innerHTML = '<div class="card-body"><h2 class="card-title h4">Фиды</h2></div>';
   const ul = document.createElement('ul');
   ul.classList.add('list-group', 'border-0', 'rounded-0');
-  feed.append(feedDiv, ul);
+  elements.feed.append(feedDiv, ul);
   state.posts.map((item) => {
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
@@ -53,14 +45,13 @@ const renderFeed = (state) => {
   });
 };
 
-const renderPosts = (state) => {
-  const posts = document.querySelector('.posts');
-  posts.innerHTML = '';
+const renderPosts = (state, elements) => {
+  elements.posts.innerHTML = '';
   const postsDiv = document.createElement('div');
   postsDiv.innerHTML = '<div class="card border-0"><div class="card-body"><h2 class="card-title h4">Посты</h2></div></div>';
   const ul2 = document.createElement('ul');
   ul2.classList.add('list-group', 'border-0', 'rounded-0');
-  posts.append(postsDiv, ul2);
+  elements.posts.append(postsDiv, ul2);
   state.posts.map((post) => {
     post.items.map((item) => {
       const [id, link, title] = item;
@@ -78,35 +69,33 @@ const renderPosts = (state) => {
   });
 };
 
-const renderModal = (state, id) => {
-  const modal = document.querySelector('#modal');
-  modal.classList.add('show');
-  modal.setAttribute('aria-modal', 'true');
-  modal.setAttribute('style', 'display: block;');
+const renderModal = (state, postId, elements) => {
+  elements.modal.classList.add('show');
+  elements.modal.setAttribute('aria-modal', 'true');
+  elements.modal.setAttribute('style', 'display: block;');
 
   const postForModal = state.posts.reduce((acc, feed) => {
-    const data = feed.items.find((item) => item.includes(id));
+    const data = feed.items.find((item) => item.includes(postId));
     if (data) return [...data];
     return acc;
   }, []);
   // eslint-disable-next-line no-unused-vars
   const [_id, link, title, description] = postForModal;
-  modal.querySelector('.modal-title').textContent = title;
-  modal.querySelector('.modal-body').textContent = description;
-  modal.querySelector('#buttonReadAll').setAttribute('href', link);
+  elements.modal.querySelector('.modal-title').textContent = title;
+  elements.modal.querySelector('.modal-body').textContent = description;
+  elements.modal.querySelector('#buttonReadAll').setAttribute('href', link);
 
-  const a = document.querySelector(`a[data-id="${id}"]`);
-  if (state.modalId.seenPostIds.includes(id)) {
-    a.classList.add('fw-normal');
-    a.classList.remove('fw-bold');
+  const postLink = document.querySelector(`a[data-id="${postId}"]`);
+  if (state.modalId.seenPostIds.includes(postId)) {
+    postLink.classList.add('fw-normal');
+    postLink.classList.remove('fw-bold');
   }
 };
 
-const removeModal = () => {
-  const modal = document.querySelector('#modal');
-  modal.classList.remove('show');
-  modal.removeAttribute('aria-modal');
-  modal.removeAttribute('style');
+const removeModal = (elements) => {
+  elements.modal.classList.remove('show');
+  elements.modal.removeAttribute('aria-modal');
+  elements.modal.removeAttribute('style');
 };
 
 export {
