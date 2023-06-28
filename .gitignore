@@ -2,5 +2,4 @@
 /dist
 
 .vscode
-.eslintrc.yml
 .eslintignore
