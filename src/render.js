@@ -9,32 +9,35 @@ const renderText = (i18nInstance) => {
 };
 
 const renderError = (errorSource, i18n, elements) => {
-  elements.statusMessage.textContent = i18n.t(`errors.${errorSource}`);
-  elements.input.classList.add('is-invalid');
-  elements.statusMessage.classList.add('text-danger');
-  elements.statusMessage.classList.remove('text-succes');
+  const { statusMessage, input, form } = elements;
+  statusMessage.textContent = i18n.t(`errors.${errorSource}`);
+  input.classList.add('is-invalid');
+  statusMessage.classList.add('text-danger');
+  statusMessage.classList.remove('text-succes');
 
-  elements.form.reset();
-  elements.input.focus();
+  form.reset();
+  input.focus();
 };
 
 const renderMessageSuccess = (i18n, elements) => {
-  elements.statusMessage.textContent = i18n.t('messageSuccess');
-  elements.input.classList.remove('is-invalid');
-  elements.statusMessage.classList.remove('text-danger');
-  elements.statusMessage.classList.add('text-success');
+  const { statusMessage, input, form } = elements;
+  statusMessage.textContent = i18n.t('messageSuccess');
+  input.classList.remove('is-invalid');
+  statusMessage.classList.remove('text-danger');
+  statusMessage.classList.add('text-success');
 
-  elements.form.reset();
-  elements.input.focus();
+  form.reset();
+  input.focus();
 };
 
 const renderFeed = (state, elements) => {
-  elements.feed.innerHTML = '';
+  const { feeds } = elements;
+  feeds.innerHTML = '';
   const container = document.createElement('div');
   container.innerHTML = '<div class="card-body"><h2 class="card-title h4">Фиды</h2></div>';
   const list = document.createElement('ul');
   list.classList.add('list-group', 'border-0', 'rounded-0');
-  elements.feed.append(container, list);
+  feeds.append(container, list);
   state.feeds.map((feed) => {
     const item = document.createElement('li');
     item.classList.add('list-group-item', 'border-0', 'border-end-0');
@@ -47,12 +50,13 @@ const renderFeed = (state, elements) => {
 };
 
 const renderPosts = (state, elements) => {
-  elements.posts.innerHTML = '';
+  const { posts } = elements;
+  posts.innerHTML = '';
   const container = document.createElement('div');
   container.innerHTML = '<div class="card border-0"><div class="card-body"><h2 class="card-title h4">Посты</h2></div></div>';
   const list = document.createElement('ul');
   list.classList.add('list-group', 'border-0', 'rounded-0');
-  elements.posts.append(container, list);
+  posts.append(container, list);
 
   state.feeds.map((feed) => {
     feed.posts.map((post) => {
@@ -73,9 +77,10 @@ const renderPosts = (state, elements) => {
 };
 
 const renderModal = (state, postId, elements) => {
-  elements.modal.classList.add('show');
-  elements.modal.setAttribute('aria-modal', 'true');
-  elements.modal.setAttribute('style', 'display: block;');
+  const { modal } = elements;
+  modal.classList.add('show');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('style', 'display: block;');
 
   const postForModal = state.feeds.reduce((acc, feed) => {
     const data = feed.posts.find((post) => post.includes(postId));
@@ -83,15 +88,16 @@ const renderModal = (state, postId, elements) => {
     return acc;
   }, []);
   const [, url, title, description] = postForModal;
-  elements.modal.querySelector('.modal-title').textContent = title;
-  elements.modal.querySelector('.modal-body').textContent = description;
-  elements.modal.querySelector('#buttonReadAll').setAttribute('href', url);
+  modal.querySelector('.modal-title').textContent = title;
+  modal.querySelector('.modal-body').textContent = description;
+  modal.querySelector('#buttonReadAll').setAttribute('href', url);
 };
 
 const removeModal = (elements) => {
-  elements.modal.classList.remove('show');
-  elements.modal.removeAttribute('aria-modal');
-  elements.modal.removeAttribute('style');
+  const { modal } = elements;
+  modal.classList.remove('show');
+  modal.removeAttribute('aria-modal');
+  modal.removeAttribute('style');
 };
 
 const renderSeenPosts = (state) => {

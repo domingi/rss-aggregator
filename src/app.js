@@ -63,7 +63,7 @@ export default () => {
 
   const elements = {
     form: document.querySelector('form'),
-    feed: document.querySelector('.feeds'),
+    feeds: document.querySelector('.feeds'),
     posts: document.querySelector('.posts'),
     modal: document.querySelector('#modal'),
     input: document.querySelector('input'),
