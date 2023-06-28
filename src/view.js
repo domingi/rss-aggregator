@@ -27,11 +27,11 @@ export default (state, i18n, elements) => {
       state.loadingProcess.status = '';
     }
 
-    if (path === 'feeds') {
+    if (path === 'feedList') {
       renderFeed(state, elements);
     }
 
-    if (path.includes('posts')) {
+    if (path.includes('feeds')) {
       renderPosts(state, elements);
     }
 

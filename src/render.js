@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 const renderText = (i18nInstance) => {
   document.querySelector('h1').textContent = i18nInstance.t('h1');
   document.querySelector('p.lead').textContent = i18nInstance.t('lead');
@@ -31,42 +30,45 @@ const renderMessageSuccess = (i18n, elements) => {
 
 const renderFeed = (state, elements) => {
   elements.feed.innerHTML = '';
-  const feedDiv = document.createElement('div');
-  feedDiv.innerHTML = '<div class="card-body"><h2 class="card-title h4">Фиды</h2></div>';
-  const ul = document.createElement('ul');
-  ul.classList.add('list-group', 'border-0', 'rounded-0');
-  elements.feed.append(feedDiv, ul);
-  state.posts.map((item) => {
-    const li = document.createElement('li');
-    li.classList.add('list-group-item', 'border-0', 'border-end-0');
-    li.innerHTML = `<h3 class="h6 m-0">${item.title}</h3><p class="m-0 small text-black-50">${item.description}</p></li>`;
-    ul.append(li);
-    return item;
+  const container = document.createElement('div');
+  container.innerHTML = '<div class="card-body"><h2 class="card-title h4">Фиды</h2></div>';
+  const list = document.createElement('ul');
+  list.classList.add('list-group', 'border-0', 'rounded-0');
+  elements.feed.append(container, list);
+  state.feeds.map((feed) => {
+    const item = document.createElement('li');
+    item.classList.add('list-group-item', 'border-0', 'border-end-0');
+    item.innerHTML = '<h3 class="h6 m-0"></h3><p class="m-0 small text-black-50"></p></li>';
+    item.querySelector('h3').textContent = feed.title;
+    item.querySelector('p').textContent = feed.description;
+    list.append(item);
+    return feed;
   });
 };
 
 const renderPosts = (state, elements) => {
   elements.posts.innerHTML = '';
-  const postsDiv = document.createElement('div');
-  postsDiv.innerHTML = '<div class="card border-0"><div class="card-body"><h2 class="card-title h4">Посты</h2></div></div>';
-  const ul2 = document.createElement('ul');
-  ul2.classList.add('list-group', 'border-0', 'rounded-0');
-  elements.posts.append(postsDiv, ul2);
+  const container = document.createElement('div');
+  container.innerHTML = '<div class="card border-0"><div class="card-body"><h2 class="card-title h4">Посты</h2></div></div>';
+  const list = document.createElement('ul');
+  list.classList.add('list-group', 'border-0', 'rounded-0');
+  elements.posts.append(container, list);
 
-  state.posts.map((post) => {
-    post.items.map((item) => {
-      const [id, link, title] = item;
-      const li = document.createElement('li');
-      li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-      li.innerHTML = `<a href=${link} data-id=${id} target="_blank" rel="noopener noreferrer">${title}</a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${id} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
-      const a = li.querySelector('a');
+  state.feeds.map((feed) => {
+    feed.posts.map((post) => {
+      const [id, url, title] = post;
+      const item = document.createElement('li');
+      item.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+      item.innerHTML = `<a href=${url} data-id=${id} target="_blank" rel="noopener noreferrer"></a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${id} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
+      const link = item.querySelector('a');
+      link.textContent = title;
       if (state.seenPostIds.includes(id)) {
-        a.classList.add('fw-normal');
-      } else a.classList.add('fw-bold');
-      ul2.append(li);
-      return item;
+        link.classList.add('fw-normal');
+      } else link.classList.add('fw-bold');
+      list.append(item);
+      return post;
     });
-    return post;
+    return feed;
   });
 };
 
@@ -75,16 +77,15 @@ const renderModal = (state, postId, elements) => {
   elements.modal.setAttribute('aria-modal', 'true');
   elements.modal.setAttribute('style', 'display: block;');
 
-  const postForModal = state.posts.reduce((acc, feed) => {
-    const data = feed.items.find((item) => item.includes(postId));
+  const postForModal = state.feeds.reduce((acc, feed) => {
+    const data = feed.posts.find((post) => post.includes(postId));
     if (data) return [...data];
     return acc;
   }, []);
-  // eslint-disable-next-line no-unused-vars
-  const [_id, link, title, description] = postForModal;
+  const [, url, title, description] = postForModal;
   elements.modal.querySelector('.modal-title').textContent = title;
   elements.modal.querySelector('.modal-body').textContent = description;
-  elements.modal.querySelector('#buttonReadAll').setAttribute('href', link);
+  elements.modal.querySelector('#buttonReadAll').setAttribute('href', url);
 };
 
 const removeModal = (elements) => {

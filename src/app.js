@@ -2,12 +2,52 @@ import './styles.scss';
 import '../index.html';
 import { string } from 'yup';
 import i18next from 'i18next';
+import axios from 'axios';
 import ru from '../locales/ru.js';
 import { renderText } from './render.js';
 import watch from './view.js';
-import {
-  parseRSS, loadRSS, refreshFeed,
-} from './tools.js';
+import parseRss from './parseRss.js';
+
+const loadRSS = (url) => {
+  const proxy = new URL('https://allorigins.hexlet.app/get');
+  proxy.searchParams.set('disableCache', 'true');
+  proxy.searchParams.set('url', url);
+
+  return axios.get(proxy.href);
+};
+
+const addNewPostsToFeed = (data, feed, url) => {
+  const newFeed = parseRss(data, url);
+  const newPosts = newFeed.posts.reduce((acc, newPost) => {
+    const [, newPostUrl] = newPost;
+    const comparePosts = feed.posts.filter(([, oldPostUrl]) => oldPostUrl === newPostUrl);
+    if (comparePosts.length === 0) acc.push(newPost);
+    return acc;
+  }, []);
+  return [...feed.posts, ...newPosts];
+};
+
+const refreshFeed = (watchedState) => {
+  if (watchedState.feedList.length === 0) {
+    return setTimeout(() => {
+      refreshFeed(watchedState);
+    }, 10000);
+  }
+
+  const promises = watchedState.feeds.map((feed) => loadRSS(feed.url)
+    .then((rssDom) => {
+      // eslint-disable-next-line no-param-reassign
+      feed.posts = addNewPostsToFeed(rssDom, feed, feed.url);
+    }).catch(() => {
+      console.log('Ошибка при обновлении RSS');
+    }));
+
+  return Promise.all([promises]).then(() => {
+    setTimeout(() => {
+      refreshFeed(watchedState);
+    }, 10000);
+  });
+};
 
 export default () => {
   const state = {
@@ -15,11 +55,10 @@ export default () => {
       status: '',
       error: [],
     },
+    feedList: [],
     feeds: [],
-    posts: [],
     modalId: null,
     seenPostIds: [],
-    idCounter: 0,
   };
 
   const elements = {
@@ -64,14 +103,14 @@ export default () => {
     const formData = new FormData(event.target);
     const url = formData.get('url');
 
-    const userSchema = string().required().url().notOneOf(state.feeds);
+    const userSchema = string().required().url().notOneOf(state.feedList);
     userSchema.validate(url)
       .then(() => {
         watchedState.loadingProcess.status = 'loading';
         loadRSS(url)
           .then((rssDom) => {
-            watchedState.posts.push(parseRSS(rssDom, url, state));
-            watchedState.feeds.push(url);
+            watchedState.feeds.push(parseRss(rssDom, url));
+            watchedState.feedList.push(url);
             state.loadingProcess.error = '';
             watchedState.loadingProcess.status = 'success';
           }).catch((error) => {
