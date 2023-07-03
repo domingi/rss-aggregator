@@ -63,8 +63,9 @@ const renderPosts = (state, elements) => {
       const [id, url, title] = post;
       const item = document.createElement('li');
       item.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-      item.innerHTML = `<a href=${url} data-id=${id} target="_blank" rel="noopener noreferrer"></a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${id} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
+      item.innerHTML = `<a data-id=${id} target="_blank" rel="noopener noreferrer"></a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${id} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
       const link = item.querySelector('a');
+      link.setAttribute('href', url);
       link.textContent = title;
       if (state.seenPostIds.includes(id)) {
         link.classList.add('fw-normal');
