@@ -9,42 +9,72 @@ import {
   renderSeenPosts,
 } from './render.js';
 
+const handleLoadingProcessStatus = (value, state, i18n, elements) => {
+  switch (value) {
+    case 'loading':
+      elements.buttonAdd.setAttribute('disabled', '');
+      break;
+
+    case 'success':
+      elements.buttonAdd.removeAttribute('disabled');
+      renderMessageSuccess(i18n, elements);
+      break;
+
+    case 'failed':
+      renderError(state.loadingProcess.error, i18n, elements);
+      elements.buttonAdd.removeAttribute('disabled');
+      break;
+
+    default:
+      throw new Error('Unknown loadingProcessStatus');
+  }
+};
+
+const handleFeeds = (state, elements) => {
+  renderFeed(state, elements);
+};
+
+const handlePosts = (state, elements) => {
+  renderPosts(state, elements);
+};
+
+const handleModal = (state, elements, value) => {
+  if (value === null) {
+    removeModal(elements);
+  } else {
+    renderModal(state, value, elements);
+  }
+};
+
+const handleSeenPosts = (state) => {
+  renderSeenPosts(state);
+};
+
 export default (state, i18n, elements) => {
   const watchedState = onChange(state, (path, value) => {
-    if (path === 'loadingProcess.status') {
-      if (value === 'loading') {
-        elements.buttonAdd.setAttribute('disabled', '');
-      }
-      if (value === 'success') {
-        elements.buttonAdd.removeAttribute('disabled');
-        renderMessageSuccess(i18n, elements);
-      }
-      if (value === 'failed') {
-        renderError(state.loadingProcess.error, i18n, elements);
-        elements.buttonAdd.removeAttribute('disabled');
-      }
-      // eslint-disable-next-line no-param-reassign
-      state.loadingProcess.status = '';
-    }
+    switch (path) {
+      case 'loadingProcess.status':
+        handleLoadingProcessStatus(value, state, i18n, elements);
+        break;
 
-    if (path === 'feedList') {
-      renderFeed(state, elements);
-    }
+      case 'feedList':
+        handleFeeds(state, elements);
+        break;
 
-    if (path.includes('feeds')) {
-      renderPosts(state, elements);
-    }
+      case 'feeds':
+        handlePosts(state, elements);
+        break;
 
-    if (path === 'modalId') {
-      if (value === null) {
-        removeModal(elements);
-      } else {
-        renderModal(state, value, elements);
-      }
-    }
+      case 'modalId':
+        handleModal(state, elements, value);
+        break;
 
-    if (path === 'seenPostIds') {
-      renderSeenPosts(state);
+      case 'seenPostIds':
+        handleSeenPosts(state);
+        break;
+
+      default:
+        handlePosts(state, elements);
     }
   });
   return watchedState;
