@@ -57,11 +57,11 @@ export default (state, i18n, elements) => {
         handleLoadingProcessStatus(value, state, i18n, elements);
         break;
 
-      case 'feedList':
+      case 'feeds':
         handleFeeds(state, elements);
         break;
 
-      case 'feeds':
+      case 'posts':
         handlePosts(state, elements);
         break;
 
@@ -74,7 +74,7 @@ export default (state, i18n, elements) => {
         break;
 
       default:
-        handlePosts(state, elements);
+        console.log('Nothing happens');
     }
   });
   return watchedState;

@@ -16,20 +16,20 @@ const loadRSS = (url) => {
   return axios.get(proxy.href);
 };
 
-const addNewPostsToFeed = (posts, feed) => {
-  posts.posts.map((newPost) => {
+const addNewPostsToFeed = (posts, state) => {
+  posts.map((newPost) => {
     const [, newPostUrl] = newPost;
-    const comparePosts = feed.posts.filter(([, oldPostUrl]) => oldPostUrl === newPostUrl);
-    if (comparePosts.length === 0) feed.posts.push(newPost);
+    const findPost = state.posts.find(([, url]) => url === newPostUrl);
+    if (!findPost) state.posts.push(newPost);
     return newPost;
   }, []);
 };
 
 const refreshFeed = (watchedState, timer) => {
   const promises = watchedState.feeds.map((feed) => loadRSS(feed.url)
-    .then((rssDom) => parseRss(rssDom, feed.url))
-    .then((posts) => {
-      addNewPostsToFeed(posts, feed);
+    .then((rssDom) => parseRss(rssDom))
+    .then((data) => {
+      addNewPostsToFeed(data.posts, watchedState);
     })
     .catch(() => {
       console.log('Ошибка при обновлении RSS');
@@ -48,8 +48,8 @@ export default () => {
       status: '',
       error: [],
     },
-    feedList: [],
     feeds: [],
+    posts: [],
     modalId: null,
     seenPostIds: [],
   };
@@ -95,15 +95,16 @@ export default () => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const url = formData.get('url');
-
-    const userSchema = string().required().url().notOneOf(state.feedList);
+    const notOneOf = state.feeds.map((feed) => feed.url);
+    const userSchema = string().required().url().notOneOf(notOneOf);
     userSchema.validate(url)
       .then(() => {
         watchedState.loadingProcess.status = 'loading';
         loadRSS(url)
           .then((rssDom) => {
-            watchedState.feeds.push(parseRss(rssDom, url));
-            watchedState.feedList.push(url);
+            const { title, description, posts } = parseRss(rssDom);
+            watchedState.feeds.push({ title, description, url });
+            watchedState.posts = [...state.posts, ...posts];
             state.loadingProcess.error = '';
             watchedState.loadingProcess.status = 'success';
             state.loadingProcess.status = '';
