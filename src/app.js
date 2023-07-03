@@ -16,36 +16,29 @@ const loadRSS = (url) => {
   return axios.get(proxy.href);
 };
 
-const addNewPostsToFeed = (data, feed, url) => {
-  const newFeed = parseRss(data, url);
-  const newPosts = newFeed.posts.reduce((acc, newPost) => {
+const addNewPostsToFeed = (posts, feed) => {
+  posts.posts.map((newPost) => {
     const [, newPostUrl] = newPost;
     const comparePosts = feed.posts.filter(([, oldPostUrl]) => oldPostUrl === newPostUrl);
-    if (comparePosts.length === 0) acc.push(newPost);
-    return acc;
+    if (comparePosts.length === 0) feed.posts.push(newPost);
+    return newPost;
   }, []);
-  return [...feed.posts, ...newPosts];
 };
 
-const refreshFeed = (watchedState) => {
-  if (watchedState.feedList.length === 0) {
-    return setTimeout(() => {
-      refreshFeed(watchedState);
-    }, 10000);
-  }
-
+const refreshFeed = (watchedState, timer) => {
   const promises = watchedState.feeds.map((feed) => loadRSS(feed.url)
-    .then((rssDom) => {
-      // eslint-disable-next-line no-param-reassign
-      feed.posts = addNewPostsToFeed(rssDom, feed, feed.url);
-    }).catch(() => {
+    .then((rssDom) => parseRss(rssDom, feed.url))
+    .then((posts) => {
+      addNewPostsToFeed(posts, feed);
+    })
+    .catch(() => {
       console.log('Ошибка при обновлении RSS');
     }));
 
   return Promise.all([promises]).then(() => {
     setTimeout(() => {
-      refreshFeed(watchedState);
-    }, 10000);
+      refreshFeed(watchedState, timer);
+    }, timer);
   });
 };
 
@@ -113,15 +106,18 @@ export default () => {
             watchedState.feedList.push(url);
             state.loadingProcess.error = '';
             watchedState.loadingProcess.status = 'success';
+            state.loadingProcess.status = '';
           }).catch((error) => {
             state.loadingProcess.error = error.code;
             watchedState.loadingProcess.status = 'failed';
+            state.loadingProcess.status = '';
           });
       })
       .catch((error) => {
         state.loadingProcess.error = error.type;
         watchedState.loadingProcess.status = 'failed';
+        state.loadingProcess.status = '';
       });
   });
-  refreshFeed(watchedState);
+  refreshFeed(watchedState, 5000);
 };

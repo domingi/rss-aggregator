@@ -2,6 +2,10 @@ export default (data, url) => {
   try {
     const parser = new DOMParser();
     const dom = parser.parseFromString(data.data.contents, 'text/xml');
+    const errorNode = dom.querySelector('parsererror');
+    if (errorNode) {
+      throw new Error(errorNode);
+    }
     const title = dom.querySelector('title').textContent;
     const description = dom.querySelector('description').textContent;
 
@@ -18,7 +22,7 @@ export default (data, url) => {
       title, description, url, posts,
     };
   } catch (error) {
-    const parseError = new Error('data parsing error');
+    const parseError = new Error(`parer error: ${error}`);
     parseError.code = 'parseError';
     throw parseError;
   }
