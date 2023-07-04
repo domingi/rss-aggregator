@@ -8,23 +8,20 @@ const renderText = (i18nInstance) => {
   document.querySelector('#buttonHide').textContent = i18nInstance.t('buttonHide');
 };
 
-const renderError = (errorSource, i18n, elements) => {
+const renderLoadingStatusMessage = (i18n, elements, error = null) => {
   const { statusMessage, input, form } = elements;
-  statusMessage.textContent = i18n.t(`errors.${errorSource}`);
-  input.classList.add('is-invalid');
-  statusMessage.classList.add('text-danger');
-  statusMessage.classList.remove('text-succes');
 
-  form.reset();
-  input.focus();
-};
-
-const renderMessageSuccess = (i18n, elements) => {
-  const { statusMessage, input, form } = elements;
-  statusMessage.textContent = i18n.t('messageSuccess');
-  input.classList.remove('is-invalid');
-  statusMessage.classList.remove('text-danger');
-  statusMessage.classList.add('text-success');
+  if (error === null) {
+    statusMessage.textContent = i18n.t('messageSuccess');
+    input.classList.remove('is-invalid');
+    statusMessage.classList.remove('text-danger');
+    statusMessage.classList.add('text-success');
+  } else {
+    statusMessage.textContent = i18n.t(`errors.${error}`);
+    input.classList.add('is-invalid');
+    statusMessage.classList.add('text-danger');
+    statusMessage.classList.remove('text-succes');
+  }
 
   form.reset();
   input.focus();
@@ -59,7 +56,7 @@ const renderPosts = (state, elements) => {
   posts.append(container, list);
 
   state.posts.map((post) => {
-    const [id, url, title] = post;
+    const [url, title, , id] = post;
     const item = document.createElement('li');
     item.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     item.innerHTML = `<a data-id=${id} target="_blank" rel="noopener noreferrer"></a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${id} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
@@ -82,7 +79,7 @@ const renderModal = (state, postId, elements) => {
 
   const postForModal = state.posts.find((post) => post.includes(postId));
 
-  const [, url, title, description] = postForModal;
+  const [url, title, description] = postForModal;
   modal.querySelector('.modal-title').textContent = title;
   modal.querySelector('.modal-body').textContent = description;
   modal.querySelector('#buttonReadAll').setAttribute('href', url);
@@ -107,8 +104,7 @@ export {
   renderText,
   renderPosts,
   renderFeed,
-  renderMessageSuccess,
-  renderError,
+  renderLoadingStatusMessage,
   renderModal,
   removeModal,
   renderSeenPosts,

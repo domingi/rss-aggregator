@@ -2,8 +2,7 @@ import onChange from 'on-change';
 import {
   renderPosts,
   renderFeed,
-  renderMessageSuccess,
-  renderError,
+  renderLoadingStatusMessage,
   removeModal,
   renderModal,
   renderSeenPosts,
@@ -17,11 +16,11 @@ const handleLoadingProcessStatus = (value, state, i18n, elements) => {
 
     case 'success':
       elements.buttonAdd.removeAttribute('disabled');
-      renderMessageSuccess(i18n, elements);
+      renderLoadingStatusMessage(i18n, elements);
       break;
 
     case 'failed':
-      renderError(state.loadingProcess.error, i18n, elements);
+      renderLoadingStatusMessage(i18n, elements, state.loadingProcess.error);
       elements.buttonAdd.removeAttribute('disabled');
       break;
 

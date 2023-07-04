@@ -16,19 +16,26 @@ const loadRSS = (url) => {
   return axios.get(proxy.href);
 };
 
+const addIdToPosts = (posts) => {
+  posts.forEach((post) => {
+    const id = Math.random();
+    post.push(id);
+  });
+};
+
 const addNewPostsToFeed = (posts, state) => {
-  posts.map((newPost) => {
-    const [, newPostUrl] = newPost;
-    const findPost = state.posts.find(([, url]) => url === newPostUrl);
+  posts.forEach((newPost) => {
+    const [newPostUrl] = newPost;
+    const findPost = state.posts.find(([url]) => url === newPostUrl);
     if (!findPost) state.posts.push(newPost);
-    return newPost;
-  }, []);
+  });
 };
 
 const refreshFeed = (watchedState, timer) => {
   const promises = watchedState.feeds.map((feed) => loadRSS(feed.url)
     .then((rssDom) => parseRss(rssDom))
     .then((data) => {
+      addIdToPosts(data.posts);
       addNewPostsToFeed(data.posts, watchedState);
     })
     .catch(() => {
@@ -67,7 +74,7 @@ export default () => {
   const i18nInstance = i18next.createInstance();
   i18nInstance.init({
     lng: 'ru',
-    debug: true,
+    debug: false,
     resources: {
       ru,
     },
@@ -103,6 +110,7 @@ export default () => {
         loadRSS(url)
           .then((rssDom) => {
             const { title, description, posts } = parseRss(rssDom);
+            addIdToPosts(posts);
             watchedState.feeds.push({ title, description, url });
             watchedState.posts = [...state.posts, ...posts];
             state.loadingProcess.error = '';
