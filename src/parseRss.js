@@ -15,7 +15,6 @@ export default (data) => {
       const url = item.querySelector('link').textContent;
       return { url, postTitle, postDescription };
     });
-    console.log(posts)
     return {
       title, description, posts,
     };

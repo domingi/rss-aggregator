@@ -65,7 +65,9 @@ const renderPosts = (state, elements) => {
     link.textContent = postTitle;
     if (state.seenPostIds.includes(id)) {
       link.classList.add('fw-normal');
-    } else link.classList.add('fw-bold');
+    } else {
+      link.classList.add('fw-bold');
+    }
     list.append(item);
     return post;
   });

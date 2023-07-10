@@ -16,18 +16,18 @@ const loadRSS = (url) => {
   return axios.get(proxy.href);
 };
 
-const addIdToPosts = (posts) => {
-  posts.forEach((post) => {
-    const id = Math.random();
-    post.id = id;
-  });
-};
+const addIdToPosts = (posts) => posts.map((post) => {
+  const id = Math.random();
+  return { ...post, id };
+});
 
 const addNewPostsToFeed = (posts, state) => {
   posts.forEach((newPost) => {
     const newPostUrl = newPost.url;
     const findPost = state.posts.find(({ url }) => url === newPostUrl);
-    if (!findPost) state.posts.push(newPost);
+    if (!findPost) {
+      state.posts.push(newPost);
+    }
   });
 };
 
@@ -35,8 +35,7 @@ const refreshFeed = (watchedState, timer) => {
   const promises = watchedState.feeds.map((feed) => loadRSS(feed.url)
     .then((rssDom) => parseRss(rssDom))
     .then((data) => {
-      addIdToPosts(data.posts);
-      addNewPostsToFeed(data.posts, watchedState);
+      addNewPostsToFeed(addIdToPosts(data.posts), watchedState);
     })
     .catch(() => {
       console.log('Ошибка при обновлении RSS');
@@ -83,12 +82,15 @@ export default () => {
   const watchedState = watch(state, i18nInstance, elements);
 
   elements.posts.addEventListener('click', (e) => {
-    if (e.target.dataset.bsToggle === 'modal') {
+    console.log(e.target.parentElement.nodeName)
+    if (e.target.parentElement.nodeName === 'LI') {
       const postId = Number(e.target.dataset.id);
       if (!state.seenPostIds.includes(postId)) {
         watchedState.seenPostIds.push(postId);
       }
-      watchedState.modalId = Number(e.target.dataset.id);
+      if (e.target.nodeName === 'BUTTON') {
+        watchedState.modalId = Number(e.target.dataset.id);
+      }
     }
   });
 
@@ -102,17 +104,16 @@ export default () => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const url = formData.get('url');
-    const notOneOf = state.feeds.map((feed) => feed.url);
-    const userSchema = string().required().url().notOneOf(notOneOf);
+    const feedUrls = state.feeds.map((feed) => feed.url);
+    const userSchema = string().required().url().notOneOf(feedUrls);
     userSchema.validate(url)
       .then(() => {
         watchedState.loadingProcess.status = 'loading';
         loadRSS(url)
           .then((rssDom) => {
             const { title, description, posts } = parseRss(rssDom);
-            addIdToPosts(posts);
             watchedState.feeds.push({ title, description, url });
-            watchedState.posts = [...state.posts, ...posts];
+            watchedState.posts = [...state.posts, ...addIdToPosts(posts)];
             state.loadingProcess.error = '';
             watchedState.loadingProcess.status = 'success';
             state.loadingProcess.status = '';
