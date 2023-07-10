@@ -19,14 +19,14 @@ const loadRSS = (url) => {
 const addIdToPosts = (posts) => {
   posts.forEach((post) => {
     const id = Math.random();
-    post.push(id);
+    post.id = id;
   });
 };
 
 const addNewPostsToFeed = (posts, state) => {
   posts.forEach((newPost) => {
-    const [newPostUrl] = newPost;
-    const findPost = state.posts.find(([url]) => url === newPostUrl);
+    const newPostUrl = newPost.url;
+    const findPost = state.posts.find(({ url }) => url === newPostUrl);
     if (!findPost) state.posts.push(newPost);
   });
 };

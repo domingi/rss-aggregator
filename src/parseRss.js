@@ -13,8 +13,9 @@ export default (data) => {
       const postTitle = item.querySelector('title').textContent;
       const postDescription = item.querySelector('description').textContent;
       const url = item.querySelector('link').textContent;
-      return [url, postTitle, postDescription];
+      return { url, postTitle, postDescription };
     });
+    console.log(posts)
     return {
       title, description, posts,
     };

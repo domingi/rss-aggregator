@@ -56,13 +56,13 @@ const renderPosts = (state, elements) => {
   posts.append(container, list);
 
   state.posts.map((post) => {
-    const [url, title, , id] = post;
+    const { url, postTitle, id } = post;
     const item = document.createElement('li');
     item.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     item.innerHTML = `<a data-id=${id} target="_blank" rel="noopener noreferrer"></a><button type="button" class="btn btn-outline-primary btn-sm" data-id=${id} data-bs-toggle="modal" data-bs-target="#modal">Просмотр</button>`;
     const link = item.querySelector('a');
     link.setAttribute('href', url);
-    link.textContent = title;
+    link.textContent = postTitle;
     if (state.seenPostIds.includes(id)) {
       link.classList.add('fw-normal');
     } else link.classList.add('fw-bold');
@@ -77,11 +77,11 @@ const renderModal = (state, postId, elements) => {
   modal.setAttribute('aria-modal', 'true');
   modal.setAttribute('style', 'display: block;');
 
-  const postForModal = state.posts.find((post) => post.includes(postId));
+  const postForModal = state.posts.find((post) => post.id === postId);
 
-  const [url, title, description] = postForModal;
-  modal.querySelector('.modal-title').textContent = title;
-  modal.querySelector('.modal-body').textContent = description;
+  const { url, postTitle, postDescription } = postForModal;
+  modal.querySelector('.modal-title').textContent = postTitle;
+  modal.querySelector('.modal-body').textContent = postDescription;
   modal.querySelector('#buttonReadAll').setAttribute('href', url);
 };
 
