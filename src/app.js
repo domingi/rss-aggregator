@@ -38,7 +38,7 @@ const refreshFeed = (watchedState, timer) => {
       addNewPostsToFeed(addIdToPosts(data.posts), watchedState);
     })
     .catch(() => {
-      console.log('Ошибка при обновлении RSS');
+      console.error('Ошибка при обновлении RSS');
     }));
 
   return Promise.all([promises]).then(() => {
@@ -82,7 +82,6 @@ export default () => {
   const watchedState = watch(state, i18nInstance, elements);
 
   elements.posts.addEventListener('click', (e) => {
-    console.log(e.target.parentElement.nodeName)
     if (e.target.parentElement.nodeName === 'LI') {
       const postId = Number(e.target.dataset.id);
       if (!state.seenPostIds.includes(postId)) {
