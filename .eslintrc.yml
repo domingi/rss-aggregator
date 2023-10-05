@@ -8,9 +8,12 @@ env:
   jest: true
   browser: true
 
+plugins:
+  - testing-library
 
 extends:
   - "airbnb-base"
+  - 'plugin:testing-library/react'
 
 parserOptions:
   ecmaVersion: latest
