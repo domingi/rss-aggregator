@@ -1,4 +1,5 @@
-[![Actions Status](https://github.com/domingi/frontend-project-11/workflows/hexlet-check/badge.svg)](https://github.com/domingi/frontend-project-11/actions)
+![Actions status playwright-test](https://github.com/domingi/frontend-project-46/actions/workflows/playwright.yml/badge.svg)
+[![Actions status hexlet-test](https://github.com/domingi/frontend-project-11/workflows/hexlet-check/badge.svg)](https://github.com/domingi/frontend-project-11/actions)
 [![Maintainability](https://api.codeclimate.com/v1/badges/032ce8f57238a3d66a5f/maintainability)](https://codeclimate.com/github/domingi/frontend-project-11/maintainability)
 
 This is my third educational project from Hexlet. The project improves skills in DOM, Webpack, Bootstrap, AJAX, and validations.
